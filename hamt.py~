@@ -1,0 +1,73 @@
+from array import array
+from random import randint
+
+class Hamt:
+    nodesize = 4
+    
+    def __init__(self):
+        # In each node, keys are stored in the first half and values are stored in the second
+        self.head = [None] * self.nodesize * 2
+        pass
+    
+    def insert(self, key, value):
+        done = False
+        l = self.head
+        depth = 0
+        while not done:
+            # get the two bits for this depth
+            index = (key >> depth) & 3
+            # We place the key and value in the node
+            if l[index] == None:
+                l[index] = key
+                l[index + self.nodesize] = value
+                done = True
+            # there is a collision
+            elif isinstance(l[index], int):
+                oldkey = l[index]
+                oldval = l[index + 4]
+                # key value now notes that it is a subnode
+                l[index] = 's'
+                l[index + 4] = [None] * self.nodesize * 2
+                # now add both of them with the new node in place 
+                self.insert(oldkey, oldval)
+                #self.insert(key, value)
+                done = True
+            # go down one node
+            else:
+                depth += 1
+                l = l[index + 4]
+                # now test the next depth, loop
+
+    def get(self, key):
+        done = False
+        value = None
+        l = self.head
+        depth = 0
+        while not done:
+            # get the two bits for this depth
+            index = (key >> depth) & 3
+            if l[index] == 's':
+                depth += 1
+                l = l[index + 4]
+            else:
+                value = l[index + 4]
+                done = True
+        return value
+
+testh = Hamt()
+
+randnumbers = [2, 4, 7, 19]
+for x in range(10):
+    randnumbers.append(randint(0, 100))
+
+for n in randnumbers:
+    testh.insert(n, n+1)
+
+print(testh.head)
+    
+for n in randnumbers:
+    val = testh.get(n)
+    if not (val == n + 1):
+        print("retrieved " + str(val) + " from " + str(n))
+
+
