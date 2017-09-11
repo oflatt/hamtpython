@@ -1,18 +1,24 @@
 from array import array
 from random import randint
 from timeit import timeit
+import gc
 
 class Hamt:
-    def __init__(self, nodesize, numbits):
+    def __init__(self, nodesize, numbits, head = None):
         # In each node, keys are stored in the first half and values are stored in the second
         self.nodesize = nodesize
         self.numbits = numbits
-        self.head = [None] * self.nodesize * 2
+        if head == None:
+            self.head = [None] * self.nodesize * 2
+        else:
+            self.head = head
         pass
     
     def insert(self, key, value):
         done = False
-        l = self.head
+        # make a new list, but not copy items in the list
+        newhead = self.head.copy()
+        l = newhead
         depth = 0
         while not done:
             # get the two bits for this depth
@@ -32,15 +38,20 @@ class Hamt:
                     # key value now notes that it is a subnode
                     l[index] = 's'
                     l[index + self.nodesize] = [None] * self.nodesize * 2
-                    # now add both of them with the new node in place 
-                    self.insert(oldkey, oldval)
-                    self.insert(key, value)
-                    done = True
+                    # now add the old one with the new node in place
+                    l = l[index + self.nodesize]
+                    oldindex = (oldkey >> depth*self.numbits) & (self.nodesize-1)
+                    l[oldindex] = oldkey
+                    l[oldindex + self.nodesize] = oldval
+                    # now loop and try to put it in the new node
+                    depth += 1
+
             # go down one node
             else:
                 depth += 1
                 l = l[index + self.nodesize]
                 # now test the next depth, loop
+        return Hamt(self.nodesize, self.numbits, newhead)
 
     def get(self, key):
         done = False
@@ -58,41 +69,71 @@ class Hamt:
                 done = True
         return value
 
-
 randnumbers = []
-testh = 0
 
 def populatenumbers(number):
     global randnumbers
     randnumbers = []
     for x in range(number):
-        randnumbers.append(randint(0, 1000))
+        randnumbers.append(randint(0, 100000))
+        
+def testhamtinsert(nodesize, numbits, justone = False):
+    newhamt = Hamt(nodesize, numbits)
+    
+    def makehamt():
+        h = newhamt
+        for n in randnumbers:
+            h = h.insert(n, n+1)
+        return h
 
-def testhamtinsert():
-    for n in randnumbers:
-        testh.insert(n, n+1)
+    if not justone:
+        for x in range(99):
+            makehamt()
+        
+    return makehamt()
 
-def testhamtget():
-    for n in randnumbers:
-        testh.get(n)
+def testhamtget(testh):
+    for x in range(100):
+        for n in randnumbers:
+            testh.get(n)
 
-def testtimes(number):
-    global testh
-    testh = Hamt(4, 2)
+def testtimes(number, nodesize, numbits):
     populatenumbers(number)
-    inserttime = timeit(testhamtinsert, number = 1)
-    gettime = timeit(testhamtget, number = 1)
-    print("Number of data points: " + str(number))
+    testhamt = testhamtinsert(nodesize, numbits, True)
+    
+    def testhamtinsertwrapper():
+        testhamtinsert(nodesize, numbits)
+
+    def testhamtgetwrapper():
+        testhamtget(testhamt)
+    
+    inserttime = timeit(testhamtinsertwrapper, number = 1)
+    gettime = timeit(testhamtgetwrapper, number = 1)
+    
+    print("Data points: " + str(number) + " node size: " + str(nodesize))
     print("Insert time: " + str(inserttime))
     print("Search time: " + str(gettime))
 
-testtimes(200)
-testtimes(200)
-testtimes(200)
-testtimes(300)
-testtimes(300)
-testtimes(300)
-testtimes(400)
-testtimes(400)
-testtimes(400)
-testtimes(9000)
+testtimes(4, 4, 2)
+gc.collect()
+testtimes(4, 8, 3)
+gc.collect()
+testtimes(4, 16, 4)
+gc.collect()
+testtimes(64, 4, 2)
+gc.collect()
+testtimes(64, 8, 3)
+gc.collect()
+testtimes(64, 16, 4)
+gc.collect()
+testtimes(512, 4, 2)
+gc.collect()
+testtimes(512, 8, 3)
+gc.collect()
+testtimes(512, 16, 4)
+gc.collect()
+testtimes(2048, 4, 2)
+gc.collect()
+testtimes(2048, 8, 3)
+gc.collect()
+testtimes(2048, 16, 4)

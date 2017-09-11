@@ -1,7 +1,9 @@
 from array import array
 from random import randint
 from timeit import timeit
-import gc
+import gc, sys
+
+print("Hamt testing with various node sizes. Times measured in seconds, and memory use in bytes.")
 
 class Hamt:
     def __init__(self, nodesize, numbits, head = None):
@@ -77,7 +79,7 @@ def populatenumbers(number):
     for x in range(number):
         randnumbers.append(randint(0, 100000))
         
-def testhamtinsert(nodesize, numbits, justone = False):
+def testhamtinsert(nodesize, numbits, repetitions, justone = False):
     newhamt = Hamt(nodesize, numbits)
     
     def makehamt():
@@ -87,36 +89,54 @@ def testhamtinsert(nodesize, numbits, justone = False):
         return h
 
     if not justone:
-        for x in range(99):
+        for x in range(repetitions-1):
             makehamt()
         
     return makehamt()
 
-def testhamtget(testh):
-    for x in range(100):
+def testhamtget(testh, repetitions):
+    for x in range(repetitions):
         for n in randnumbers:
             testh.get(n)
 
-def testtimes(number, nodesize, numbits):
+def testtimes(number, nodesize, numbits, repetitions):
     populatenumbers(number)
-    testhamt = testhamtinsert(nodesize, numbits, True)
+    testhamt = testhamtinsert(nodesize, numbits, repetitions, True)
     
     def testhamtinsertwrapper():
-        testhamtinsert(nodesize, numbits)
+        testhamtinsert(nodesize, numbits, repetitions)
 
     def testhamtgetwrapper():
-        testhamtget(testhamt)
+        testhamtget(testhamt, repetitions)
     
     inserttime = timeit(testhamtinsertwrapper, number = 1)
     gettime = timeit(testhamtgetwrapper, number = 1)
     
-    print("Data points: " + str(number) + " node size: " + str(nodesize))
+    print("Number of data points: " + str(number) + " node size: " + str(nodesize) + " repetitions: " + str(repetitions))
     print("Insert time: " + str(inserttime))
     print("Search time: " + str(gettime))
+    print("Memory use of one hamt: " + str(sys.getsizeof(testhamt.head)))
 
-
-testtimes(512, 4, 2)
+testtimes(4, 4, 2, 1000)
 gc.collect()
-testtimes(512, 8, 3)
+testtimes(4, 8, 3, 1000)
 gc.collect()
-testtimes(512, 16, 4)
+testtimes(4, 16, 4, 1000)
+gc.collect()
+testtimes(64, 4, 2, 1000)
+gc.collect()
+testtimes(64, 8, 3, 1000)
+gc.collect()
+testtimes(64, 16, 4, 1000)
+gc.collect()
+testtimes(512, 4, 2, 50)
+gc.collect()
+testtimes(512, 8, 3, 50)
+gc.collect()
+testtimes(512, 16, 4, 50)
+gc.collect()
+testtimes(2048, 4, 2, 2)
+gc.collect()
+testtimes(2048, 8, 3, 2)
+gc.collect()
+testtimes(2048, 16, 4, 2)
