@@ -120,6 +120,14 @@ def testhamtget(testh, repetitions):
         for n in randnumbers:
             testh.get(n)
 
+def getmemoryuse(l):
+    memoryuse = sys.getsizeof(l)
+    for x in l:
+        if isinstance(x, list):
+            memoryuse += getmemoryuse(x)
+    return memoryuse
+    
+
 def testtimes(number, nodesize, numbits, repetitions):
     populatenumbers(number)
     testhamt = testhamtinsert(nodesize, numbits, repetitions, True)
@@ -136,7 +144,7 @@ def testtimes(number, nodesize, numbits, repetitions):
     print("Number of data points: " + str(number) + " node size: " + str(nodesize) + " repetitions: " + str(repetitions))
     print("Insert time: " + str(inserttime))
     print("Search time: " + str(gettime))
-    print("Memory use of one hamt: " + str(sys.getsizeof(testhamt.head)))
+    print("Memory use of one hamt: " + str(getmemoryuse(testhamt.head)))
 
 testtimes(4, 4, 2, 1000)
 gc.collect()
