@@ -41,12 +41,12 @@ class Hamt:
                     l[index] = 's'
                     l[index + self.nodesize] = [None] * self.nodesize * 2
                     # now add the old one with the new node in place
+                    depth += 1
                     l = l[index + self.nodesize]
                     oldindex = (oldkey >> depth*self.numbits) & (self.nodesize-1)
                     l[oldindex] = oldkey
                     l[oldindex + self.nodesize] = oldval
                     # now loop and try to put it in the new node
-                    depth += 1
 
             # go down one node
             else:
@@ -70,6 +70,27 @@ class Hamt:
                 value = l[index + self.nodesize]
                 done = True
         return value
+
+# test cases
+newhamt = Hamt(4, 2)
+def gethead(list):
+    h = newhamt
+    for x in list:
+        h = h.insert(x, x+1)
+    return h.head
+
+def testlist(l, expected):
+    t = gethead(l)
+    if t != expected:
+        print(t)
+        print("expected: " + str(expected))
+
+testlist([0,1,2,3], [0,1,2,3,1,2,3,4])
+testlist([0,2, 3, 1], [0,1,2,3,1,2,3,4])
+testlist([3,2,1,0], [0,1,2,3,1,2,3,4])
+testlist([3,1,2,0], [0,1,2,3,1,2,3,4])
+biglist = [424, 64]
+testlist(biglist, gethead(reversed(biglist)))
 
 randnumbers = []
 
@@ -135,8 +156,8 @@ testtimes(512, 8, 3, 50)
 gc.collect()
 testtimes(512, 16, 4, 50)
 gc.collect()
-testtimes(2048, 4, 2, 2)
+testtimes(2048, 4, 2, 10)
 gc.collect()
-testtimes(2048, 8, 3, 2)
+testtimes(2048, 8, 3, 10)
 gc.collect()
-testtimes(2048, 16, 4, 2)
+testtimes(2048, 16, 4, 10)
