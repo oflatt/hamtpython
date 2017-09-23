@@ -1,4 +1,3 @@
-from array import array
 from random import randint
 from timeit import timeit
 import gc, sys

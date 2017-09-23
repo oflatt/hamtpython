@@ -12,7 +12,7 @@ class Hamt:
         self.bitmapoffset = 1
         self.numbits = numbits
         if head == None:
-            self.head = [None] * self.nodesize * 2
+            self.head = [0]
         else:
             self.head = head
         pass
@@ -27,40 +27,51 @@ class Hamt:
             # get the two bits for this depth
             index = (key >> depth*self.numbits) & (self.nodesize-1)
             bitmap = l[0]
+            nodelength = bin(bitmap).count("1")
+            lengthafter = bin(bitmap >> index).count("1")
+            #this has the bitmap accounted for
+            lengthoflist = len(l)
+            listindex = lengthoflist-nodelength-lengthafter
+            secondlistindex = lengthoflist - lengthafter
             
             # We place the key and value in the node if it's not occupied
             if not (bitmap >> index) & 1:
                 #set the bit in the bitmap to 1
                 mask = 1 << index
-                l[0] = bitmap |= mask
+                l[0] = bitmap | mask
                 # now insert in right place, growing list
-                #################################################### got up to hear
-                l[index+1] = key
-                l[index + self.nodesize] = value
+                l.insert(listindex, key)
+                #can't use secondlistindex because not the list has changed size
+                l.insert(len(l)-lengthafter, value)
                 done = True
             # there is a collision
-            elif isinstance(l[index], int):
-                oldkey = l[index]
-                oldval = l[index + self.nodesize]
+            elif isinstance(l[listindex], int):
+                oldkey = l[listindex]
+                oldval = l[secondlistindex]
                 if oldval == value:
                     done = True
                 else:
                     # key value now notes that it is a subnode
-                    l[index] = 's'
-                    l[index + self.nodesize] = [None] * self.nodesize * 2
+                    l[listindex] = 's'
+                    #new list with empty bitmap
+                    l[secondlistindex] = [0]
                     # now add the old one with the new node in place
                     depth += 1
-                    l = l[index + self.nodesize]
+                    l = l[secondlistindex]
+                    #set the bit in the bitmap to 1
                     oldindex = (oldkey >> depth*self.numbits) & (self.nodesize-1)
-                    l[oldindex] = oldkey
-                    l[oldindex + self.nodesize] = oldval
+                    mask = 1 << oldindex
+                    l[0] = mask
+                    l.append(oldkey)
+                    l.append(oldval)
                     # now loop and try to put it in the new node
 
             # go down one node
             else:
                 depth += 1
-                l = l[index + self.nodesize]
+                l = l[secondlistindex]
                 # now test the next depth, loop
+
         return Hamt(self.nodesize, self.numbits, newhead)
 
     def get(self, key):
@@ -71,11 +82,18 @@ class Hamt:
         while not done:
             # get the two bits for this depth
             index = (key >> depth*self.numbits) & (self.nodesize-1)
-            if l[index] == 's':
+            bitmap = l[0]
+            nodelength = bin(bitmap).count("1")
+            lengthafter = bin(bitmap >> index).count("1")
+            #this has the bitmap accounted for
+            lengthoflist = len(l)
+            listindex = lengthoflist-nodelength-lengthafter
+            secondlistindex = lengthoflist - lengthafter
+            if l[listindex] == 's':
                 depth += 1
-                l = l[index + self.nodesize]
+                l = l[secondlistindex]
             else:
-                value = l[index + self.nodesize]
+                value = l[secondlistindex]
                 done = True
         return value
 
@@ -93,11 +111,14 @@ def testlist(l, expected):
         print(t)
         print("expected: " + str(expected))
 
-testlist([0,1,2,3], [0,1,2,3,1,2,3,4])
-testlist([0,2, 3, 1], [0,1,2,3,1,2,3,4])
-testlist([3,2,1,0], [0,1,2,3,1,2,3,4])
-testlist([3,1,2,0], [0,1,2,3,1,2,3,4])
-biglist = [424, 64]
+testlist([0, 1, 2], [7,0, 1, 2, 1, 2, 3])
+testlist([1, 2,0], [7,0, 1, 2, 1, 2, 3])
+testlist([0,2, 3], [13, 0,2, 3,1, 3, 4])
+testlist([0,1,2,3], [15,0,1,2,3,1,2,3,4])
+testlist([0,2, 3, 1], [15,0,1,2,3,1,2,3,4])
+testlist([3,2,1,0], [15,0,1,2,3,1,2,3,4])
+testlist([3,1,2,0], [15,0,1,2,3,1,2,3,4])
+biglist = [424, 64, 34523, 23454, 23434, 1231, 3423 ,53453 ,345345]
 testlist(biglist, gethead(reversed(biglist)))
 
 randnumbers = []
@@ -109,10 +130,10 @@ def populatenumbers(number):
         randnumbers.append(randint(0, 100000))
         
 def testhamtinsert(nodesize, numbits, repetitions, justone = False):
-    newhamt = Hamt(nodesize, numbits)
+    nhamt = Hamt(nodesize, numbits)
     
     def makehamt():
-        h = newhamt
+        h = nhamt
         for n in randnumbers:
             h = h.insert(n, n+1)
         return h
@@ -127,6 +148,13 @@ def testhamtget(testh, repetitions):
     for x in range(repetitions):
         for n in randnumbers:
             testh.get(n)
+
+def getmemoryuse(l):
+    memoryuse = sys.getsizeof(l)
+    for x in l:
+        if isinstance(x, list):
+            memoryuse += getmemoryuse(x)
+    return memoryuse
 
 def testtimes(number, nodesize, numbits, repetitions):
     populatenumbers(number)
@@ -144,7 +172,7 @@ def testtimes(number, nodesize, numbits, repetitions):
     print("Number of data points: " + str(number) + " node size: " + str(nodesize) + " repetitions: " + str(repetitions))
     print("Insert time: " + str(inserttime))
     print("Search time: " + str(gettime))
-    print("Memory use of one hamt: " + str(sys.getsizeof(testhamt.head)))
+    print("Memory use of one hamt: " + str(getmemoryuse(testhamt.head)))
 
 testtimes(4, 4, 2, 1000)
 gc.collect()
