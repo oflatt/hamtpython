@@ -5,6 +5,7 @@ import gc, sys
 
 print("Hamt testing with various node sizes. Times measured in seconds, and memory use in bytes.")
 
+
 class Hamt:
     def __init__(self, nodesize, numbits, head = None):
         # In each node, keys are stored in the first half and values are stored in the second
@@ -162,44 +163,50 @@ def testtimes(number, nodesize, numbits, repetitions):
     populatenumbers(number+1000)
     testhamt = testhamtinsert(number, nodesize, numbits, repetitions, True)
     
-    def testhamtinsertwrapper():
-        testhamtinsert(number, nodesize, numbits, repetitions)
+    #def testhamtinsertwrapper():
+     #   testhamtinsert(number, nodesize, numbits, repetitions)
 
     def testhamtgetwrapper():
         testhamtget(number, testhamt, repetitions)
     
-    inserttime = timeit(testhamtinsertwrapper, number = 1)
+    #inserttime = timeit(testhamtinsertwrapper, number = 1)
     gettime = timeit(testhamtgetwrapper, number = 1)
-    
-    print("Number of data points: " + str(number) + " node size: " + str(nodesize) + " repetitions: " + str(repetitions))
-    print("Insert time: " + str(inserttime))
-    print("Search time: " + str(gettime))
-    print("Memory use of one hamt: " + str(getmemoryuse(testhamt.head)))
 
+    print(str(gettime) + ",", end='')
+    #print("Number of data points: " + str(number) + " node size: " + str(nodesize) + " repetitions: " + str(repetitions))
+    #print("Insert time: " + str(inserttime))
+    #print("Search time: " + str(gettime))
+    #print("Memory use of one hamt: " + str(getmemoryuse(testhamt.head)))
+
+print("Iterations,Number of Keys,4,8,16,32,64,128")
+print("10000,4,", end='')
 testtimes(4, 4, 2, 10000)
 testtimes(4, 8, 3, 10000)
 testtimes(4, 16, 4, 10000)
 testtimes(4, 32, 5, 10000)
 testtimes(4, 64, 6, 10000)
 testtimes(4, 128, 7, 10000)
-
-testtimes(64, 4, 2, 1000)
-testtimes(64, 8, 3, 1000)
-testtimes(64, 16, 4, 1000)
-testtimes(64, 32, 5, 1000)
-testtimes(64, 64, 6, 1000)
-testtimes(64, 128, 7, 1000)
-
+print("")
+print("500,64,", end='')
+testtimes(64, 4, 2, 500)
+testtimes(64, 8, 3, 500)
+testtimes(64, 16, 4, 500)
+testtimes(64, 32, 5, 500)
+testtimes(64, 64, 6, 500)
+testtimes(64, 128, 7, 500)
+print("")
+print("50,512,", end='')
 testtimes(512, 4, 2, 50)
 testtimes(512, 8, 3, 50)
 testtimes(512, 16, 4, 50)
 testtimes(512, 32, 5, 50)
 testtimes(512, 64, 6, 50)
 testtimes(512, 128, 7, 50)
-
-testtimes(2048, 4, 2, 20)
-testtimes(2048, 8, 3, 20)
-testtimes(2048, 16, 4, 20)
-testtimes(2048, 32, 5, 20)
-testtimes(2048, 64, 6, 20)
-testtimes(2048, 128, 7, 20)
+print("")
+print("10,2048,", end='')
+testtimes(2048, 4, 2, 10)
+testtimes(2048, 8, 3, 10)
+testtimes(2048, 16, 4, 10)
+testtimes(2048, 32, 5, 10)
+testtimes(2048, 64, 6, 10)
+testtimes(2048, 128, 7, 10)
