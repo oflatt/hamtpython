@@ -47,16 +47,16 @@ def testtimes(number, repetitions, isPersistant = False):
     def testinsertwrapper():
         testinsert(repetitions, isPersistant)
 
-    def testgetwrapper():
-        testget(testdict, repetitions)
+    #def testgetwrapper():
+    #    testget(testdict, repetitions)
     
     inserttime = timeit(testinsertwrapper, number = 1)
-    gettime = timeit(testgetwrapper, number = 1)
+    #gettime = timeit(testgetwrapper, number = 1)
     
     print("Number of data points: " + str(number) + " repetitions: " + str(repetitions))
     print("Insert time: " + str(inserttime))
-    print("Search time: " + str(gettime))
-    print("Memory use of one dictionary: " + str(getmemoryuse(testdict)))
+    #print("Search time: " + str(gettime))
+    #print("Memory use of one dictionary: " + str(getmemoryuse(testdict)))
 
 print("Non-persistant use of dictionaries:")
 testtimes(4, 100000)
