@@ -172,7 +172,7 @@ def testtimes(number, nodesize, numbits, repetitions):
     #inserttime = timeit(testhamtinsertwrapper, number = 1)
     #gettime = timeit(testhamtgetwrapper, number = 1)
 
-    print(str(getmemoryuse(testhamt.head))) + ",", end='')
+    print(str(getmemoryuse(testhamt.head)) + ",", end='')
     #print("Number of data points: " + str(number) + " node size: " + str(nodesize) + " repetitions: " + str(repetitions))
     #print("Insert time: " + str(inserttime))
     #print("Search time: " + str(gettime))
