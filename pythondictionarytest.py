@@ -56,7 +56,7 @@ def testtimes(number, repetitions, isPersistant = False):
     print("Number of data points: " + str(number) + " repetitions: " + str(repetitions))
     print("Insert time: " + str(inserttime))
     #print("Search time: " + str(gettime))
-    #print("Memory use of one dictionary: " + str(getmemoryuse(testdict)))
+    print("Memory use of one dictionary: " + str(getmemoryuse(testdict)))
 
 print("Non-persistant use of dictionaries:")
 testtimes(4, 100000)
